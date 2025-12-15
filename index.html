@@ -259,13 +259,13 @@
     const layerPanel = document.createElement('div');
     layerPanel.id = 'layer-panel';
     // Style handled by flex layout now, removed absolute positioning
-    layerPanel.style.cssText = '
+    layerPanel.style.cssText = `
         display: flex;
         align-items: center;
         gap: 8px;
         white-space: nowrap;
         font-size: 12px;
-    ';
+    `;
     // Append to the new container in Info Bar
     document.getElementById('layer-container').appendChild(layerPanel);
 
