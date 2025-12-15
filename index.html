@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TextToCAD v1.57</title>
+    <title>TextToCAD v1.59</title>
     <style>
         body {
             margin: 0;
@@ -196,7 +196,7 @@
     </div>
     
     <div style="position: absolute; left: 50%; transform: translateX(-50%); font-weight:bold; font-size: 16px;">
-        TextToCAD v1.57
+        TextToCAD v1.59
     </div>
 
     <div>
@@ -259,13 +259,13 @@
     const layerPanel = document.createElement('div');
     layerPanel.id = 'layer-panel';
     // Style handled by flex layout now, removed absolute positioning
-    layerPanel.style.cssText = `
+    layerPanel.style.cssText = '
         display: flex;
         align-items: center;
         gap: 8px;
         white-space: nowrap;
         font-size: 12px;
-    `;
+    ';
     // Append to the new container in Info Bar
     document.getElementById('layer-container').appendChild(layerPanel);
 
@@ -425,7 +425,7 @@
 
     // Add Command List Panel
     const cmdListPanel = document.createElement('div');
-    cmdListPanel.style.cssText = `
+    cmdListPanel.style.cssText = '
         position: absolute;
         top: 10px;
         left: 10px;
@@ -438,7 +438,7 @@
         gap: 5px;
         width: 100px;
         z-index: 90;
-    `;
+    ';
     document.getElementById('canvas-container').appendChild(cmdListPanel);
     
 
@@ -603,6 +603,17 @@
         for(let i=1; i<=10; i++) layerOpts.push({ value: i, text: `Layer ${i}` });
         createSelect('Layer', layerOpts, s.layer || 1, v => s.layer = parseInt(v));
 
+        // Color Selector
+        const colorOpts = [
+            { value: '#000000', text: 'Black' },
+            { value: '#ff0000', text: 'Red' },
+            { value: '#0000ff', text: 'Blue' },
+            { value: '#008000', text: 'Green' },
+            { value: '#808080', text: 'Gray' },
+            { value: '#00ffff', text: 'Cyan' }
+        ];
+        createSelect('Color', colorOpts, s.color || '#000000', v => s.color = v);
+
         // Line Type Selector
         createSelect('線種', [
             { value: 'medium', text: '中太 (標準)' },
@@ -653,11 +664,6 @@
             row.appendChild(lbl);
             row.appendChild(chk);
             propContent.appendChild(row);
-        } else if (s.type === 'TEXT') {
-            createInput('X', s.x, v => s.x = v);
-            createInput('Y', s.y, v => s.y = v);
-            createInput('Size', s.size, v => s.size = v);
-            createTextInput('Content', s.text, v => s.text = v);
         } else if (s.type === 'POLYLINE') {
              const row = document.createElement('div');
              row.className = 'prop-row';
@@ -665,6 +671,11 @@
              row.style.color = '#555';
              row.textContent = `Polyline: ${s.vertices.length} pts`;
              propContent.appendChild(row);
+        } else if (s.type === 'TEXT') {
+            createInput('X', s.x, v => s.x = v);
+            createInput('Y', s.y, v => s.y = v);
+            createInput('Size', s.size, v => s.size = v);
+            createTextInput('Content', s.text, v => s.text = v);
         }
     }
 
@@ -786,7 +797,7 @@
             let dash = [];
             
             const lt = s.lineType || 'medium';
-            if (lt === 'thick') { lw = 4.0; }
+            if (lt === 'thick') { lw = 4.0; } 
             else if (lt === 'thin') { lw = 1.0; } 
             else if (lt === 'thin-dot') { lw = 1.0; dash = [2, 3]; } 
             else if (lt === 'thin-dashdot') { lw = 1.0; dash = [10, 3, 2, 3]; }
@@ -813,7 +824,7 @@
             else if (s.type === 'POLYLINE') drawPolyline(ctx, s, view);
             else if (s.type === 'TEXT') drawText(ctx, s, view, index === selectedShapeIndex, isLayerVisible);
             
-            ctx.setLineDash([]);
+            ctx.setLineDash([]); // Reset dash
         };
 
         // Pass 1: Draw Hidden Layers
@@ -941,9 +952,11 @@
 
         let xx, yy;
         if (param < 0) {
-            xx = s.x1; yy = s.y1;
+            xx = s.x1;
+            yy = s.y1;
         } else if (param > 1) {
-            xx = s.x2; yy = s.y2;
+            xx = s.x2;
+            yy = s.y2;
         } else {
             xx = s.x1 + param * C;
             yy = s.y1 + param * D;
@@ -1211,7 +1224,7 @@
                     const b = data[i + 2];
                     // Threshold to keep black/dark gray lines.
                     // Background is #d0d0d0 (208), Grid is #e8e8e8 (232), Axis is #ccc (204)
-                    // We want to REMOVE background(208) and grid(232), by setting it to White (Opaque)
+                    // We want to REMOVE background(208) and grid(232), by setting it to White (Opaque) 
                     // so it blocks content underneath when pasted (e.g. into Excel).
                     // Adjusted threshold to use captureThreshold variable.
                     if (r > captureThreshold || g > captureThreshold || b > captureThreshold) {
@@ -1247,8 +1260,7 @@
             updatePropertiesPanel();
         }
         view.isDragging = false;
-        view.mode = 'PAN'; // Reset mode
-        view.didMoveShape = false;
+        view.mode = 'PAN';
     });
     
     canvas.addEventListener('mousemove', e => {
@@ -1422,7 +1434,7 @@
                 // Minimal implementation for now to restore functionality
                  const totalDx = (e.touches[0].clientX - view.startClickX) / view.scale;
                 const totalDy = -(e.touches[0].clientY - view.startClickY) / view.scale;
-                 // ... need full logic here? reusing mousemove logic is better if abstracted.
+                 // ... need full logic here? reusing mousemove logic is better if abstracted. 
                  // For now, just trigger draw.
             }
             view.lastX = e.touches[0].clientX;
@@ -2283,7 +2295,7 @@
                     });
                 } 
                 // Note: DIM shapes are composed of lines/texts already, handled individually if not grouped. 
-                // cmdDim creates separate entities.
+                // cmdDim creates separate entities. 
 
                 newShapes.push(newShape);
                 count++;
@@ -2360,7 +2372,7 @@
                 if (s.type === 'LINE') { s.x1 *= sx; s.y1 *= sy; s.x2 *= sx; s.y2 *= sy; }
                 else if (s.type === 'RECT') { s.x *= sx; s.y *= sy; s.w *= sx; s.h *= sy; }
                 else if (s.type === 'CIRCLE') {
-                    if (Math.abs(sx - sy) < 0.0001) { s.cx *= sx; s.cy *= sy; s.r *= Math.abs(sx); }
+                    if (Math.abs(sx - sy) < 0.0001) { s.cx *= sx; s.cy *= sy; s.r *= Math.abs(sx); } 
                     else {
                         // Convert to ELLIPSE
                         const newShape = {
@@ -2384,7 +2396,7 @@
                         s.ry *= (Math.abs(sx) + Math.abs(sy)) / 2;
                     }
                 } else if (s.type === 'ARC') {
-                    if (Math.abs(sx - sy) < 0.0001) { s.cx *= sx; s.cy *= sy; s.r *= Math.abs(sx); }
+                    if (Math.abs(sx - sy) < 0.0001) { s.cx *= sx; s.cy *= sy; s.r *= Math.abs(sx); } 
                     else {
                         const transformAngle = (angle, sx, sy) => Math.atan2(Math.sin(angle) * sy, Math.cos(angle) * sx);
                         const newStart = transformAngle(s.startAngle, sx, sy);
@@ -2715,7 +2727,7 @@
             else if (lt === 'thin-dashdot') ltype = "THIN_DASHDOT";
 
             const layer = s.layer || 1;
-            const common = `8\n${layer}\n6\n${ltype}\n`; // Layer & Linetype
+            const common = `8\n${layer}\n6\n${ltype}\n`; // Layer & Linetype 
 
             if (s.type === 'LINE') {
                 dxf += `0\nLINE\n${common}`;
@@ -2940,7 +2952,7 @@
         return processedShapes;
     }
 
-    // Initialize Event Listeners for Import/Export
+    // --- Initialize Event Listeners for Import/Export ---
     const btnImport = document.getElementById('btn-import');
     const fileImport = document.getElementById('file-import');
     const btnExport = document.getElementById('btn-export');
