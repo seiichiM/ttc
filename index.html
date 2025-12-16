@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TextToCAD v1.60</title>
+    <title>TextToCAD v1.61</title>
     <style>
         body {
             margin: 0;
@@ -192,11 +192,12 @@
         <button id="btn-inv-cmd">INV</button>
         <button id="btn-merge-cmd">MERGE</button>
         <button id="btn-cap-cmd">CAP</button>
+        <button id="btn-hatch-cmd">HATCH</button>
         <button id="btn-clear-cmd">CLEAR</button>
     </div>
     
     <div style="position: absolute; left: 50%; transform: translateX(-50%); font-weight:bold; font-size: 16px;">
-        TextToCAD v1.60
+        TextToCAD v1.61
     </div>
 
     <div>
@@ -367,6 +368,10 @@
     let captureStart = null; // {x, y} screen coords
     let captureCurrent = null; // {x, y} screen coords
 
+    // Hatching Mode State
+    let isHatchingMode = false;
+    let hatchingPoints = [];
+
     // Command names for quick input
     const commandNames = ['LINE', 'RECT', 'CIRCLE', 'TEXT', 'DIM', 'ANGLE', 'CUTLINE', 'CUTEXE'];
     let commandNameIndex = -1; // -1 means no command name selected yet
@@ -422,6 +427,26 @@
     setupHeaderCmd('btn-merge-cmd', 'MERGE');
     setupHeaderCmd('btn-cap-cmd', 'CAP', true); // Immediate execution
     setupHeaderCmd('btn-clear-cmd', 'CLEAR');
+
+    // Hatch Command
+    const btnHatch = document.getElementById('btn-hatch-cmd');
+    if (btnHatch) {
+        btnHatch.addEventListener('click', () => {
+            isHatchingMode = !isHatchingMode;
+            hatchingPoints = [];
+            btnHatch.style.background = isHatchingMode ? '#dc3545' : '#007bff';
+            if (isHatchingMode) {
+                log('HATCH Mode: Right-click to add points. Right-click near start to close.');
+                // Disable other modes if necessary
+                isMoveMode = false;
+                btnModeMove.style.background = '#007bff';
+                btnModeMove.textContent = 'MOVE Mode: OFF';
+            } else {
+                log('Exited HATCH Mode.');
+            }
+            draw();
+        });
+    }
 
     // Add Command List Panel
     const cmdListPanel = document.createElement('div');
@@ -721,6 +746,15 @@
             for (let i = 1; i < s.vertices.length; i++) {
                 ctx.lineTo(s.vertices[i].x, s.vertices[i].y);
             }
+            if (s.closed) ctx.closePath();
+            
+            if (s.filled) {
+                ctx.save();
+                ctx.globalAlpha = 0.3;
+                ctx.fillStyle = s.fillColor || s.color || '#000';
+                ctx.fill();
+                ctx.restore();
+            }
             ctx.stroke();
         }
     }
@@ -836,6 +870,33 @@
         // Draw Auxiliary Lines
         cutAuxiliaryLines.forEach(s => drawAuxiliaryLine(s));
 
+        // Draw Hatching Preview
+        if (isHatchingMode && hatchingPoints.length > 0) {
+            ctx.beginPath();
+            ctx.strokeStyle = '#ff00ff'; // Magenta for hatching preview
+            ctx.lineWidth = 1 / view.scale;
+            ctx.setLineDash([5 / view.scale, 3 / view.scale]);
+            
+            ctx.moveTo(hatchingPoints[0].x, hatchingPoints[0].y);
+            for (let i = 1; i < hatchingPoints.length; i++) {
+                ctx.lineTo(hatchingPoints[i].x, hatchingPoints[i].y);
+            }
+            // Line to current mouse pos
+            ctx.lineTo(lastMouseWorldX, lastMouseWorldY);
+            
+            ctx.stroke();
+            
+            // Draw points
+            ctx.fillStyle = '#ff00ff';
+            hatchingPoints.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3 / view.scale, 0, Math.PI*2);
+                ctx.fill();
+            });
+            
+            ctx.setLineDash([]);
+        }
+
         // Draw Capture Selection Box
         if (isCaptureMode && captureStart && captureCurrent) {
             ctx.save();
@@ -892,6 +953,15 @@
             ctx.moveTo(s.vertices[0].x, s.vertices[0].y);
             for (let i = 1; i < s.vertices.length; i++) {
                 ctx.lineTo(s.vertices[i].x, s.vertices[i].y);
+            }
+            if (s.closed) ctx.closePath();
+            
+            if (s.filled) {
+                ctx.save();
+                ctx.globalAlpha = 0.3;
+                ctx.fillStyle = s.fillColor || s.color || '#000';
+                ctx.fill();
+                ctx.restore();
             }
             ctx.stroke();
         }
@@ -1886,11 +1956,45 @@
         const wx = (mx - (canvas.width/2 + view.x)) / view.scale;
         const wy = - (my - (canvas.height/2 + view.y)) / view.scale;
         
-        const ep = findNearestSnapPoint(wx, wy);
-        if (!ep) return;
+        const ep = findNearestSnapPoint(wx, wy) || {x: wx, y: wy}; // Default to click pos if no snap
         const tx = ep.x;
         const ty = ep.y;
-        const strPaste = `${tx.toFixed(2)} ${ty.toFixed(2)} `; // For Input (No leading, Trailing space)
+
+        if (isHatchingMode) {
+            // Hatching Logic
+            if (hatchingPoints.length > 2) {
+                // Check distance to start point
+                const start = hatchingPoints[0];
+                const dist = Math.sqrt((tx - start.x)**2 + (ty - start.y)**2);
+                const closeThreshold = 10 / view.scale; // Screen pixel tolerance
+
+                if (dist < closeThreshold || (isSnapEnabled && dist < EPSILON)) {
+                    // Close shape
+                    shapes.push({
+                        type: 'POLYLINE',
+                        vertices: [...hatchingPoints, {x: hatchingPoints[0].x, y: hatchingPoints[0].y}],
+                        layer: getActiveLayer(),
+                        filled: true,
+                        fillColor: '#808080', // Default fill
+                        closed: true
+                    });
+                    saveHistory();
+                    log('Hatch created.');
+                    hatchingPoints = [];
+                    draw();
+                    return;
+                }
+            }
+            hatchingPoints.push({x: tx, y: ty});
+            draw();
+            return;
+        }
+
+        // Original Paste Logic
+        const snapPt = findNearestSnapPoint(wx, wy);
+        if (!snapPt) return; // Only paste if snapped? Original logic implied this.
+        
+        const strPaste = `${snapPt.x.toFixed(2)} ${snapPt.y.toFixed(2)} `; // For Input (No leading, Trailing space)
 
         // Always Paste to Command Input on Right Click
         const input = cmdInput;
