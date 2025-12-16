@@ -2,8 +2,8 @@
       "build": {
         "beforeDevCommand": "",
         "beforeBuildCommand": "",
-        "devPath": "../index.html",
-        "distDir": "../",
+        "devPath": "../frontend-dist/index.html",
+        "distDir": "../frontend-dist",
         "withGlobalTauri": true
       },
       "package": {
@@ -30,7 +30,7 @@
             "icons/icon.png",
             "icons/icon.ico"
           ],
-          "identifier": "com.tauri.app",
+          "identifier": "com.tauri.builder.app",
           "longDescription": "",
           "macOS": {
             "entitlements": null,
