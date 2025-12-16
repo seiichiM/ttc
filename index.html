@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TextToCAD v1.68</title>
+    <title>TextToCAD v1.69</title>
     <style>
         body {
             margin: 0;
@@ -195,7 +195,7 @@
     </div>
     
     <div style="position: absolute; left: 50%; transform: translateX(-50%); font-weight:bold; font-size: 16px;">
-        TextToCAD v1.68
+        TextToCAD v1.69
     </div>
 
     <div>
@@ -3263,8 +3263,19 @@
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             if (isHatchingMode) {
-                hatchingPoints = []; // Clear points
-                log('HATCH operation cancelled.');
+                if (hatchingPoints.length > 0) {
+                    hatchingPoints.pop(); // Remove the last point
+                    log('Last HATCH point removed.');
+                } else {
+                    // If no points left, exit hatching mode
+                    isHatchingMode = false;
+                    const btnModeHatch = document.getElementById('btn-mode-hatch');
+                    if (btnModeHatch) {
+                        btnModeHatch.textContent = 'HATCH Mode: OFF';
+                        btnModeHatch.style.background = '#007bff';
+                    }
+                    log('Exited HATCH Mode.');
+                }
                 draw();
             }
             // Add other mode cancellations here if needed
