@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TextToCAD v1.62</title>
+    <title>TextToCAD v1.63</title>
     <style>
         body {
             margin: 0;
@@ -196,7 +196,7 @@
     </div>
     
     <div style="position: absolute; left: 50%; transform: translateX(-50%); font-weight:bold; font-size: 16px;">
-        TextToCAD v1.62
+        TextToCAD v1.63
     </div>
 
     <div>
@@ -779,7 +779,7 @@
     // --- Main Draw Function ---
     function draw() {
         // Clear background
-        ctx.fillStyle = '#d0d0d0';
+        ctx.fillStyle = isCaptureMode ? '#ffffff' : '#d0d0d0';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
         // Grid
@@ -1259,72 +1259,47 @@
             const w = Math.abs(captureCurrent.x - captureStart.x);
             const h = Math.abs(captureCurrent.y - captureStart.y);
 
-            if (w > 0 && h > 0) {
-                // Create a temporary canvas to crop the image with higher resolution
-                const scaleFactor = 2; // Increase resolution by 2x
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = w * scaleFactor;
-                tempCanvas.height = h * scaleFactor;
-                const tempCtx = tempCanvas.getContext('2d');
-                
-                // Draw the selected portion from the main canvas to the temp canvas
-                // Note: we need to draw the main canvas content *without* the selection box first.
-                // But since the selection box is drawn in 'draw()', we can just redraw the scene
-                // to the main canvas (clearing the box) before capturing, then draw the box again if we wanted (but we're ending capture).
-                
-                // 1. Redraw scene without selection box (isCaptureMode is still true, but we pass a flag or temporarily disable?)
-                // Actually, let's just toggle the mode off momentarily or handle drawing differently.
-                // Simpler: Just redraw now. 'captureStart' is non-null, so draw() draws the box.
-                // We need to redraw WITHOUT the box to capture.
-                const savedStart = captureStart;
-                captureStart = null; // Hide box for redraw
-                draw(); 
-                
-                // Scale context for high-res drawing
-                tempCtx.scale(scaleFactor, scaleFactor);
-                tempCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
-                
-                // Filter: Keep only black pixels (make others transparent)
-                // We need to get image data from the *scaled* canvas size
-                let imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-                let data = imgData.data;
-                for (let i = 0; i < data.length; i += 4) {
-                    const r = data[i];
-                    const g = data[i + 1];
-                    const b = data[i + 2];
-                    // Threshold to keep black/dark gray lines.
-                    // Background is #d0d0d0 (208), Grid is #e8e8e8 (232), Axis is #ccc (204)
-                    // We want to REMOVE background(208) and grid(232), by setting it to White (Opaque) 
-                    // so it blocks content underneath when pasted (e.g. into Excel).
-                    // Adjusted threshold to use captureThreshold variable.
-                    if (r > captureThreshold || g > captureThreshold || b > captureThreshold) {
-                        data[i] = 255;     // R
-                        data[i + 1] = 255; // G
-                        data[i + 2] = 255; // B
-                        data[i + 3] = 255; // Alpha (Opaque)
+                        if (w > 0 && h > 0) {
+                            // Create a temporary canvas to crop the image with higher resolution
+                            const scaleFactor = 2; // Increase resolution by 2x
+                            const tempCanvas = document.createElement('canvas');
+                            tempCanvas.width = w * scaleFactor;
+                            tempCanvas.height = h * scaleFactor;
+                            const tempCtx = tempCanvas.getContext('2d');
+                            
+                            // Draw the selected portion from the main canvas to the temp canvas
+                            // Note: we need to draw the main canvas content *without* the selection box first.
+                            // But since the selection box is drawn in 'draw()', we can just redraw the scene
+                            // to the main canvas (clearing the box) before capturing, then draw the box again if we wanted (but we're ending capture).
+                            
+                            // 1. Redraw scene without selection box (isCaptureMode is still true, background is White)
+                            const savedStart = captureStart;
+                            captureStart = null; // Hide box for redraw
+                            draw(); 
+                            
+                            // Scale context for high-res drawing
+                            tempCtx.scale(scaleFactor, scaleFactor);
+                            // Draw Image directly
+                            tempCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
+                            
+                            // Download
+                            const link = document.createElement('a');
+                            link.download = `capture_${Date.now()}.png`;
+                            link.href = tempCanvas.toDataURL();
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            
+                            log('Image captured.');
+                        }
+            
+                        isCaptureMode = false;
+                        captureStart = null;
+                        captureCurrent = null;
+                        canvas.style.cursor = 'crosshair';
+                        draw(); // Redraw (Background returns to Gray)
+                        return;
                     }
-                }
-                tempCtx.putImageData(imgData, 0, 0);
-                
-                // Download
-                const link = document.createElement('a');
-                link.download = `capture_${Date.now()}.png`;
-                link.href = tempCanvas.toDataURL();
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                log('Image captured (High Res).');
-            }
-
-            isCaptureMode = false;
-            captureStart = null;
-            captureCurrent = null;
-            canvas.style.cursor = 'crosshair';
-            draw();
-            return;
-        }
-
         if (view.isDragging && view.didMoveShape) {
             saveHistory();
             updatePropertiesPanel();
@@ -2434,21 +2409,10 @@
     }
 
     function cmdCap(parts) {
-        if (parts && parts.length > 1) {
-            const val = parseInt(parts[1]);
-            if (!isNaN(val) && val >= 0 && val <= 255) {
-                captureThreshold = val;
-                log(`Capture threshold set to ${captureThreshold}`);
-            } else {
-                log('Invalid threshold. Using default (180).', 'error');
-                captureThreshold = 180;
-            }
-        } else {
-            captureThreshold = 180;
-        }
         isCaptureMode = true;
-        log(`Capture Mode (Threshold: ${captureThreshold}): Drag to select area to save image.`);
+        log(`Capture Mode: Drag to select area to save image.`);
         canvas.style.cursor = 'crosshair';
+        draw(); // Redraw to change background color
     }
 
     function cmdClear() {
