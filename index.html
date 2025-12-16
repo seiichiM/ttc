@@ -155,7 +155,7 @@
         }
         
         /* Specific style for Move Mode Button - Made smaller */
-        #btn-mode-move {
+        #btn-mode-move, #btn-mode-hatch {
             padding: 4px 8px !important;
             font-size: 11px !important;
             font-weight: bold;
@@ -165,7 +165,7 @@
             background: #007bff;
             color: white;
         }
-        #btn-mode-move:hover {
+        #btn-mode-move:hover, #btn-mode-hatch:hover {
             background: #0056b3;
         }
     </style>
@@ -191,12 +191,11 @@
         <button id="btn-copy-cmd">COPY</button>
         <button id="btn-inv-cmd">INV</button>
         <button id="btn-merge-cmd">MERGE</button>
-        <button id="btn-hatch-cmd">HATCH</button>
         <button id="btn-clear-cmd">CLEAR</button>
     </div>
     
     <div style="position: absolute; left: 50%; transform: translateX(-50%); font-weight:bold; font-size: 16px;">
-        TextToCAD v1.64
+        TextToCAD v1.65
     </div>
 
     <div>
@@ -224,6 +223,7 @@
         <div id="right-pane">
             <div id="info-bar">
                 <button id="btn-mode-move">MOVE Mode: OFF</button>
+                <button id="btn-mode-hatch" style="margin-left:5px;">HATCH Mode: OFF</button>
                 <div id="coords-display">0.00, 0.00</div>
                 <div id="layer-container" style="display:flex; gap:5px; align-items:center;"></div>
             </div>
@@ -428,19 +428,25 @@
     setupHeaderCmd('btn-cap-cmd', 'CAP', true); // Immediate execution
     setupHeaderCmd('btn-clear-cmd', 'CLEAR');
 
-    // Hatch Command
-    const btnHatch = document.getElementById('btn-hatch-cmd');
-    if (btnHatch) {
-        btnHatch.addEventListener('click', () => {
+    // Hatch Mode Toggle
+    const btnModeHatch = document.getElementById('btn-mode-hatch');
+    if (btnModeHatch) {
+        btnModeHatch.addEventListener('click', () => {
             isHatchingMode = !isHatchingMode;
             hatchingPoints = [];
-            btnHatch.style.background = isHatchingMode ? '#dc3545' : '#007bff';
+            
+            // Update UI
+            btnModeHatch.textContent = `HATCH Mode: ${isHatchingMode ? 'ON' : 'OFF'}`;
+            btnModeHatch.style.background = isHatchingMode ? '#dc3545' : '#007bff';
+            
             if (isHatchingMode) {
-                log('HATCH Mode: Right-click to add points. Right-click near start to close.');
-                // Disable other modes if necessary
-                isMoveMode = false;
-                btnModeMove.style.background = '#007bff';
-                btnModeMove.textContent = 'MOVE Mode: OFF';
+                log('HATCH Mode: Double-click circle to hatch. Right-click for polygon.');
+                // Disable Move Mode
+                if (isMoveMode) {
+                    isMoveMode = false;
+                    btnModeMove.style.background = '#007bff';
+                    btnModeMove.textContent = 'MOVE Mode: OFF';
+                }
             } else {
                 log('Exited HATCH Mode.');
             }
@@ -534,6 +540,13 @@
         btnModeMove.textContent = `MOVE Mode: ${isMoveMode ? 'ON' : 'OFF'}`;
         btnModeMove.style.background = isMoveMode ? '#dc3545' : '#007bff';
         if (isMoveMode) {
+            // Disable Hatch Mode
+            if (isHatchingMode) {
+                isHatchingMode = false;
+                btnModeHatch.textContent = 'HATCH Mode: OFF';
+                btnModeHatch.style.background = '#007bff';
+            }
+            
             selectedShapeIndex = -1; // Deselect
             updatePropertiesPanel();
             draw();
