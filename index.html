@@ -3239,24 +3239,23 @@
 
         // Command History Navigation
         if (cmdHistory.length > 0) {
-             if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                if (cmdHistoryIndex > 0) {
-                    cmdHistoryIndex--;
-                } else if (cmdHistoryIndex === -1) {
-                     cmdHistoryIndex = cmdHistory.length - 1;
-                }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault(); // Prevent cursor movement in input
+                cmdHistoryIndex = Math.max(0, cmdHistoryIndex - 1);
                 cmdInput.value = cmdHistory[cmdHistoryIndex];
             } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                if (cmdHistoryIndex < cmdHistory.length - 1) {
-                    cmdHistoryIndex++;
-                    cmdInput.value = cmdHistory[cmdHistoryIndex];
-                } else {
-                    cmdHistoryIndex = cmdHistory.length;
-                    cmdInput.value = '';
-                }
+                e.preventDefault(); // Prevent cursor movement in input
+                cmdHistoryIndex = Math.min(cmdHistory.length, cmdHistoryIndex + 1);
+                cmdInput.value = cmdHistory[cmdHistoryIndex] || '';
             }
+        }
+
+        // Hatching Mode: Clear current points on Escape
+        if (e.key === 'Escape' && isHatchingMode) {
+            hatchingPoints = [];
+            log('HATCH operation cancelled.');
+            draw(); // Redraw to clear preview
+            e.preventDefault(); // Prevent default browser action (e.g., closing a dialog)
         }
     });
 
