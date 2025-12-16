@@ -705,52 +705,13 @@
     }
 
     // --- Initialization ---
-
-    function drawEllipse(ctx, s, view) {
-        ctx.ellipse(s.cx, s.cy, s.rx, s.ry, s.rotation || 0, s.startAngle || 0, s.endAngle || 2*Math.PI, s.counterClockwise || false);
-        ctx.stroke();
+    function resizeCanvas() {
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+        draw();
     }
-
-    function drawArc(ctx, s, view) {
-        ctx.arc(s.cx, s.cy, s.r, s.startAngle, s.endAngle, s.counterClockwise);
-        ctx.stroke();
-    }
-
-    function drawPolyline(ctx, s, view) {
-        if (s.vertices.length > 0) {
-            ctx.moveTo(s.vertices[0].x, s.vertices[0].y);
-            for (let i = 1; i < s.vertices.length; i++) {
-                ctx.lineTo(s.vertices[i].x, s.vertices[i].y);
-            }
-            if (s.closed) ctx.closePath();
-            
-            if (s.filled) {
-                ctx.save();
-                ctx.globalAlpha = 0.3;
-                ctx.fillStyle = s.fillColor || s.color || '#000';
-                ctx.fill();
-                ctx.restore();
-            }
-            ctx.stroke();
-        }
-    }
-
-    function drawText(ctx, s, view, isSelected, isVisible) {
-        if (isVisible && isSelected) {
-            ctx.fillStyle = '#ffa500'; // Selected: Orange
-        } else if (!isVisible) {
-            ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
-        } else {
-            ctx.fillStyle = s.color || '#000';
-        }
-        
-        ctx.save();
-        ctx.translate(s.x, s.y);
-        ctx.scale(1, -1); 
-        ctx.font = `${s.size}px monospace`;
-        ctx.fillText(s.text, 0, 0);
-        ctx.restore();
-    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
     // --- Main Draw Function ---
     function draw() {
