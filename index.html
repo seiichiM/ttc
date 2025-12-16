@@ -705,18 +705,6 @@
     }
 
     // --- Initialization ---
-    function drawCircle(ctx, s, view) {
-        ctx.beginPath();
-        ctx.arc(s.cx, s.cy, s.r, 0, Math.PI * 2);
-        if (s.filled) {
-            ctx.save();
-            ctx.globalAlpha = 0.3;
-            ctx.fillStyle = s.color || '#000';
-            ctx.fill();
-            ctx.restore();
-        }
-        ctx.stroke();
-    }
 
     function drawEllipse(ctx, s, view) {
         ctx.ellipse(s.cx, s.cy, s.rx, s.ry, s.rotation || 0, s.startAngle || 0, s.endAngle || 2*Math.PI, s.counterClockwise || false);
@@ -922,7 +910,15 @@
     }
 
     function drawCircle(ctx, s, view) {
+        ctx.beginPath();
         ctx.arc(s.cx, s.cy, s.r, 0, Math.PI * 2);
+        if (s.filled) {
+            ctx.save();
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = s.color || '#000';
+            ctx.fill();
+            ctx.restore();
+        }
         ctx.stroke();
     }
 
