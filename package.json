@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "node -e "const fs = require('fs'); const d='dist'; if(!fs.existsSync(d)){fs.mkdirSync(d);} try{fs.copyFileSync('index.html', d+'/index.html');}catch(e){fs.writeFileSync(d+'/index.html', '<h1>App</h1>');}"",
+    "build": "echo 'No build script needed'",
     "tauri": "tauri"
   },
   "devDependencies": {
