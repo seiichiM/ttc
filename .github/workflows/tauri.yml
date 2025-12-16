@@ -37,6 +37,15 @@ jobs:
       - name: install frontend dependencies
         run: npm install || true
 
+      - name: Prepare dist
+        run: |
+          mkdir -p dist
+          cp index.html dist/ 2>/dev/null || true
+          cp -r assets dist/ 2>/dev/null || true
+          cp -r css dist/ 2>/dev/null || true
+          cp -r js dist/ 2>/dev/null || true
+          cp -r img dist/ 2>/dev/null || true
+
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
@@ -49,4 +58,4 @@ jobs:
           prerelease: false
           args: ${{ matrix.args }}
 
-# Updated at 2025-12-16T21:09:38.579Z
+# Updated at 2025-12-16T21:20:07.121Z
