@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TextToCAD v1.65</title>
+    <title>TextToCAD v1.66</title>
     <style>
         body {
             margin: 0;
@@ -2792,6 +2792,18 @@
                 dxf += `0\nCIRCLE\n${common}`;
                 dxf += `10\n${s.cx}\n20\n${s.cy}\n30\n0\n`;
                 dxf += `40\n${s.r}\n`;
+                if (s.filled) {
+                    dxf += "0\nHATCH\n100\nAcDbEntity\n";
+                    dxf += `8\n${layer}\n`;
+                    dxf += "100\nAcDbHatch\n";
+                    dxf += "10\n0.0\n20\n0.0\n30\n0.0\n";
+                    dxf += "210\n0.0\n220\n0.0\n230\n1.0\n";
+                    dxf += "2\nSOLID\n70\n1\n71\n0\n";
+                    dxf += "91\n1\n92\n1\n93\n1\n72\n2\n";
+                    dxf += `10\n${s.cx}\n20\n${s.cy}\n40\n${s.r}\n`;
+                    dxf += "50\n0.0\n51\n360.0\n73\n1\n";
+                    dxf += "75\n0\n76\n1\n98\n0\n";
+                }
             } else if (s.type === 'ELLIPSE') {
                 dxf += `0\nELLIPSE\n${common}`;
                 dxf += `100\nAcDbEllipse\n`;
@@ -2826,6 +2838,20 @@
                 s.vertices.forEach(v => {
                     dxf += `10\n${v.x}\n20\n${v.y}\n`;
                 });
+                if (s.filled) {
+                    dxf += "0\nHATCH\n100\nAcDbEntity\n";
+                    dxf += `8\n${layer}\n`;
+                    dxf += "100\nAcDbHatch\n";
+                    dxf += "10\n0.0\n20\n0.0\n30\n0.0\n";
+                    dxf += "210\n0.0\n220\n0.0\n230\n1.0\n";
+                    dxf += "2\nSOLID\n70\n1\n71\n0\n";
+                    dxf += "91\n1\n92\n2\n72\n0\n73\n1\n";
+                    dxf += `93\n${s.vertices.length}\n`;
+                    s.vertices.forEach(v => {
+                        dxf += `10\n${v.x}\n20\n${v.y}\n`;
+                    });
+                    dxf += "75\n0\n76\n1\n98\n0\n";
+                }
             } else if (s.type === 'TEXT') {
                 dxf += `0\nTEXT\n${common}`;
                 dxf += `10\n${s.x}\n20\n${s.y}\n30\n0\n`;
