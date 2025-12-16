@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TextToCAD v1.63</title>
+    <title>TextToCAD v1.64</title>
     <style>
         body {
             margin: 0;
@@ -196,7 +196,7 @@
     </div>
     
     <div style="position: absolute; left: 50%; transform: translateX(-50%); font-weight:bold; font-size: 16px;">
-        TextToCAD v1.63
+        TextToCAD v1.64
     </div>
 
     <div>
@@ -705,28 +705,16 @@
     }
 
     // --- Initialization ---
-    function resizeCanvas() {
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
-        draw();
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    // --- Drawing Helpers ---
-    function drawLine(ctx, s, view) {
-        ctx.moveTo(s.x1, s.y1);
-        ctx.lineTo(s.x2, s.y2);
-        ctx.stroke();
-    }
-
-    function drawRect(ctx, s, view) {
-        ctx.rect(s.x, s.y, s.w, s.h);
-        ctx.stroke();
-    }
-
     function drawCircle(ctx, s, view) {
+        ctx.beginPath();
         ctx.arc(s.cx, s.cy, s.r, 0, Math.PI * 2);
+        if (s.filled) {
+            ctx.save();
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = s.color || '#000';
+            ctx.fill();
+            ctx.restore();
+        }
         ctx.stroke();
     }
 
@@ -1635,6 +1623,26 @@
         const my = e.clientY - rect.top;
         let wx = (mx - (canvas.width/2 + view.x)) / view.scale;
         let wy = - (my - (canvas.height/2 + view.y)) / view.scale;
+
+        // Special logic for Hatch Mode + Circle Selection
+        if (isHatchingMode && selectedShapeIndex >= 0) {
+            const s = shapes[selectedShapeIndex];
+            if (s.type === 'CIRCLE') {
+                // Check if double click is inside or near the circle
+                // Use tolerance for "on the circle" or just check bounds/distance?
+                // Instruction: "Double click ON the circle". Let's use hitTest logic tolerance.
+                const tolerance = 10 / view.scale; 
+                if (isHitCircle(s, wx, wy, tolerance)) {
+                    s.filled = !s.filled; // Toggle fill
+                    // s.fillColor = '#808080'; // Optional: if we wanted fixed color, but using line color per previous fix
+                    log(`Circle hatch ${s.filled ? 'applied' : 'removed'}.`);
+                    saveHistory();
+                    draw();
+                    return;
+                }
+            }
+        }
+
         if (isSnapEnabled) { wx = snap(wx); wy = snap(wy); }
         const val = `${wx.toFixed(2)} ${wy.toFixed(2)} `;
         cmdInput.value += val;
