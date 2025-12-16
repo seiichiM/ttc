@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TextToCAD v1.59</title>
+    <title>TextToCAD v1.60</title>
     <style>
         body {
             margin: 0;
@@ -196,7 +196,7 @@
     </div>
     
     <div style="position: absolute; left: 50%; transform: translateX(-50%); font-weight:bold; font-size: 16px;">
-        TextToCAD v1.59
+        TextToCAD v1.60
     </div>
 
     <div>
@@ -727,7 +727,7 @@
 
     function drawText(ctx, s, view, isSelected, isVisible) {
         if (isVisible && isSelected) {
-            ctx.fillStyle = '#ff0000';
+            ctx.fillStyle = '#ffa500'; // Selected: Orange
         } else if (!isVisible) {
             ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
         } else {
@@ -807,7 +807,7 @@
 
             if (s.type !== 'TEXT') {
                 if (isLayerVisible && index === selectedShapeIndex) {
-                    ctx.strokeStyle = '#ff0000';
+                    ctx.strokeStyle = '#ffa500'; // Selected: Orange
                     ctx.lineWidth = (lw + 2) / view.scale; 
                 } else if (!isLayerVisible) {
                     ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
@@ -899,7 +899,7 @@
 
     function drawText(ctx, s, view, isSelected, isVisible) {
         if (isVisible && isSelected) {
-            ctx.fillStyle = '#ff0000';
+            ctx.fillStyle = '#ffa500'; // Selected: Orange
         } else if (!isVisible) {
             ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
         } else {
