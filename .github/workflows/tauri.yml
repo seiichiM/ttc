@@ -37,16 +37,6 @@ jobs:
       - name: install frontend dependencies
         run: npm install || true
 
-      - name: Prepare dist
-        shell: bash
-        run: |
-          mkdir -p dist
-          cp index.html dist/ 2>/dev/null || echo "<h1>Fallback App</h1>" > dist/index.html
-          cp -r assets dist/ 2>/dev/null || true
-          cp -r css dist/ 2>/dev/null || true
-          cp -r js dist/ 2>/dev/null || true
-          cp -r img dist/ 2>/dev/null || true
-
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
@@ -59,4 +49,4 @@ jobs:
           prerelease: false
           args: ${{ matrix.args }}
 
-# Updated at 2025-12-16T21:30:35.831Z
+# Updated at 2025-12-16T21:32:56.656Z
