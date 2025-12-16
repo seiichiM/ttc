@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TextToCAD v1.66</title>
+    <title>TextToCAD v1.67</title>
     <style>
         body {
             margin: 0;
@@ -195,7 +195,7 @@
     </div>
     
     <div style="position: absolute; left: 50%; transform: translateX(-50%); font-weight:bold; font-size: 16px;">
-        TextToCAD v1.65
+        TextToCAD v1.67
     </div>
 
     <div>
@@ -2895,6 +2895,9 @@
                 } else if (value === 'TEXT') {
                     currentEntity = { type: 'TEXT', layer: 1, lineType: 'medium', text: '', size: 10 };
                     newShapes.push(currentEntity);
+                } else if (value === 'HATCH') {
+                    currentEntity = { type: 'HATCH', layer: 1, lineType: 'medium', fillMode: 0, vertices: [] };
+                    newShapes.push(currentEntity);
                 } else if (value === 'SECTION' || value === 'ENDSEC' || value === 'EOF') {
                     currentEntity = null; 
                 } else {
@@ -2937,8 +2940,8 @@
                     if (code === '10') currentEntity.cx = parseFloat(value);
                     if (code === '20') currentEntity.cy = parseFloat(value);
                     if (code === '40') currentEntity.r = parseFloat(value);
-                    if (code === '50') currentEntity.startAngle = parseFloat(value) * Math.PI / 180; // Convert to radians
-                    if (code === '51') currentEntity.endAngle = parseFloat(value) * Math.PI / 180;   // Convert to radians
+                    if (code === '50') currentEntity.startAngle = parseFloat(value) * Math.PI / 180;
+                    if (code === '51') currentEntity.endAngle = parseFloat(value) * Math.PI / 180;
                 } else if (currentEntity.type === 'LWPOLYLINE') {
                     if (code === '10') {
                         currentEntity.vertices.push({ x: parseFloat(value), y: null });
@@ -2951,6 +2954,27 @@
                      if (code === '20') currentEntity.y = parseFloat(value);
                      if (code === '40') currentEntity.size = parseFloat(value);
                      if (code === '1') currentEntity.text = value;
+                } else if (currentEntity.type === 'HATCH') {
+                    if (code === '70') currentEntity.fillMode = parseInt(value); // 1 = Solid
+                    if (code === '72') currentEntity.edgeType = parseInt(value); // 2 = Arc
+                    if (code === '92') currentEntity.pathType = parseInt(value); // 2 = Polyline
+                    
+                    if (code === '10') {
+                        if (currentEntity.pathType === 2) { // Polyline boundary
+                             currentEntity.vertices.push({ x: parseFloat(value), y: null });
+                        } else {
+                             currentEntity.cx = parseFloat(value); // Arc/Circle center
+                        }
+                    }
+                    if (code === '20') {
+                        if (currentEntity.pathType === 2) {
+                             const v = currentEntity.vertices[currentEntity.vertices.length - 1];
+                             if (v) v.y = parseFloat(value);
+                        } else {
+                             currentEntity.cy = parseFloat(value);
+                        }
+                    }
+                    if (code === '40') currentEntity.r = parseFloat(value); 
                 }
             }
         }
@@ -2958,7 +2982,6 @@
         // Post-process and Validation
         const processedShapes = [];
         newShapes.forEach(s => {
-            // Preserve layer & lineType
             const commonProps = { layer: s.layer || 1, lineType: s.lineType || 'medium' };
             
             if (s.type === 'LINE') {
@@ -2971,7 +2994,6 @@
                 }
             } else if (s.type === 'ELLIPSE') {
                 if (!isNaN(s.cx) && !isNaN(s.cy) && !isNaN(s.mx) && !isNaN(s.my)) {
-                    // Convert DXF Major Axis Vector (mx, my) to rx, ry, rotation
                     const rx = Math.sqrt(s.mx*s.mx + s.my*s.my);
                     const ry = rx * (s.ratio || 1.0);
                     const rotation = Math.atan2(s.my, s.mx);
@@ -2983,7 +3005,7 @@
                         rotation: rotation,
                         startAngle: s.startP || 0,
                         endAngle: s.endP || 2*Math.PI,
-                        counterClockwise: false, // DXF is usually CCW relative to major axis
+                        counterClockwise: false,
                         ...commonProps 
                     });
                 }
@@ -3016,6 +3038,29 @@
                             type: 'LINE',
                             x1: vLast.x, y1: vLast.y,
                             x2: vFirst.x, y2: vFirst.y,
+                            ...commonProps
+                        });
+                    }
+                }
+            } else if (s.type === 'HATCH') {
+                if (s.fillMode === 1) {
+                    if (s.pathType === 2 && s.vertices.length > 0) {
+                        // Polyline Hatch
+                        const validVerts = s.vertices.filter(v => v.y !== null);
+                        if (validVerts.length > 2) {
+                            processedShapes.push({
+                                type: 'POLYLINE',
+                                vertices: validVerts,
+                                filled: true,
+                                ...commonProps
+                            });
+                        }
+                    } else if (s.edgeType === 2 && !isNaN(s.cx) && !isNaN(s.cy) && !isNaN(s.r)) {
+                        // Circular Hatch
+                        processedShapes.push({
+                            type: 'CIRCLE',
+                            cx: s.cx, cy: s.cy, r: s.r,
+                            filled: true,
                             ...commonProps
                         });
                     }
