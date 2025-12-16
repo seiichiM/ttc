@@ -37,6 +37,20 @@ jobs:
       - name: install frontend dependencies
         run: npm install || true
 
+      - name: Setup Frontend
+        run: |
+          New-Item -ItemType Directory -Force -Path frontend-dist
+          if (Test-Path index.html) {
+            Copy-Item -Path index.html -Destination frontend-dist/index.html
+            Write-Host "Copied index.html"
+          } else {
+            Set-Content -Path frontend-dist/index.html -Value "<h1>Hello Tauri</h1>"
+            Write-Host "Created dummy index.html"
+          }
+          if (Test-Path assets) { Copy-Item -Path assets -Destination frontend-dist/ -Recurse -Force }
+          if (Test-Path css) { Copy-Item -Path css -Destination frontend-dist/ -Recurse -Force }
+          if (Test-Path js) { Copy-Item -Path js -Destination frontend-dist/ -Recurse -Force }
+
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
@@ -49,4 +63,4 @@ jobs:
           prerelease: false
           args: ${{ matrix.args }}
 
-# Updated at 2025-12-16T21:32:56.656Z
+# Updated at 2025-12-16T21:39:25.821Z
