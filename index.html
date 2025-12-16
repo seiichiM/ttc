@@ -1975,7 +1975,8 @@
                         vertices: [...hatchingPoints, {x: hatchingPoints[0].x, y: hatchingPoints[0].y}],
                         layer: getActiveLayer(),
                         filled: true,
-                        fillColor: '#808080', // Default fill
+                        // fillColor: '#808080', // Removed fixed fill color to use line color
+                        color: '#808080', // Default hatch color (Gray)
                         closed: true
                     });
                     saveHistory();
