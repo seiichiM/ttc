@@ -796,7 +796,8 @@
                 } else if (!isLayerVisible) {
                     ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
                 } else {
-                    ctx.strokeStyle = s.color || '#000';
+                    // Force black border if filled, otherwise use shape color
+                    ctx.strokeStyle = s.filled ? '#000000' : (s.color || '#000');
                 }
             }
 
