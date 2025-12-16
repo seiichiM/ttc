@@ -38,6 +38,7 @@ jobs:
         run: npm install || true
 
       - name: Setup Frontend
+        shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path frontend-dist
           if (Test-Path index.html) {
@@ -62,5 +63,3 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
-
-# Updated at 2025-12-16T21:48:02.067Z
