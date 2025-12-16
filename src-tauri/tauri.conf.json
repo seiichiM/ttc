@@ -1,66 +1,67 @@
-{ 
-  "build": {
-    "beforeDevCommand": "",
-    "beforeBuildCommand": "",
-    "devPath": "../index.html",
-    "distDir": "../",
-    "withGlobalTauri": true
-  },
-  "package": {
-    "productName": "MyApp",
-    "version": "0.1.0"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "shell": {
-        "all": false,
-        "open": true
-      }
-    },
-    "bundle": {
-      "active": true,
-      "category": "DeveloperTool",
-      "copyright": "",
-      "deb": {
-        "depends": []
+{
+      "build": {
+        "beforeDevCommand": "",
+        "beforeBuildCommand": "",
+        "devPath": "../index.html",
+        "distDir": "../",
+        "withGlobalTauri": true
       },
-      "externalBin": [],
-      "icon": [
-        "icons/icon.png"
-      ],
-      "identifier": "com.tauri.app",
-      "longDescription": "",
-      "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
-        "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": null
+      "package": {
+        "productName": "MyApp",
+        "version": "0.1.0"
       },
-      "resources": [],
-      "shortDescription": "",
-      "targets": "all",
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": ""
+      "tauri": {
+        "allowlist": {
+          "all": false,
+          "shell": {
+            "all": false,
+            "open": true
+          }
+        },
+        "bundle": {
+          "active": true,
+          "category": "DeveloperTool",
+          "copyright": "",
+          "deb": {
+            "depends": []
+          },
+          "externalBin": [],
+          "icon": [
+            "icons/icon.png",
+            "icons/icon.ico"
+          ],
+          "identifier": "com.tauri.app",
+          "longDescription": "",
+          "macOS": {
+            "entitlements": null,
+            "exceptionDomain": "",
+            "frameworks": [],
+            "providerShortName": null,
+            "signingIdentity": null
+          },
+          "resources": [],
+          "shortDescription": "",
+          "targets": "all",
+          "windows": {
+            "certificateThumbprint": null,
+            "digestAlgorithm": "sha256",
+            "timestampUrl": ""
+          }
+        },
+        "security": {
+          "csp": null
+        },
+        "updater": {
+          "active": false
+        },
+        "windows": [
+          {
+            "fullscreen": false,
+            "height": 600,
+            "resizable": true,
+            "title": "MyApp",
+            "width": 800
+          }
+        ]
       }
-    },
-    "security": {
-      "csp": null
-    },
-    "updater": {
-      "active": false
-    },
-    "windows": [
-      {
-        "fullscreen": false,
-        "height": 600,
-        "resizable": true,
-        "title": "MyApp",
-        "width": 800
-      }
-    ]
-  }
-}
+    }
