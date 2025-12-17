@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TextToCAD v1.69</title>
+    <title>TextToCAD v1.70</title>
     <style>
         body {
             margin: 0;
@@ -195,7 +195,7 @@
     </div>
     
     <div style="position: absolute; left: 50%; transform: translateX(-50%); font-weight:bold; font-size: 16px;">
-        TextToCAD v1.69
+        TextToCAD v1.70
     </div>
 
     <div>
@@ -3140,18 +3140,44 @@
     }
 
     if (btnExport) {
-        btnExport.addEventListener('click', () => {
+        btnExport.addEventListener('click', async () => {
             const dxfContent = generateDXF(shapes);
-            const blob = new Blob([dxfContent], { type: 'application/dxf' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'drawing.dxf';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            log('DXF Exported.');
+            
+            // Try File System Access API (Standard "Save As" Dialog)
+            if (window.showSaveFilePicker) {
+                try {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: 'drawing.dxf',
+                        types: [{
+                            description: 'DXF File',
+                            accept: { 'application/dxf': ['.dxf'] },
+                        }],
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(dxfContent);
+                    await writable.close();
+                    log('DXF Exported (Saved As).');
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        console.error('Save File Picker failed:', err);
+                        log('Save failed: ' + err.message, 'error');
+                    } else {
+                        log('Save cancelled.');
+                    }
+                }
+            } else {
+                // Fallback for browsers without API support (e.g. Firefox, old Tauri webview)
+                const blob = new Blob([dxfContent], { type: 'application/dxf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'drawing.dxf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                log('DXF Exported (Download).');
+            }
         });
     }
 
