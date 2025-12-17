@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TextToCAD v1.70</title>
+    <title>TextToCAD v1.71</title>
     <style>
         body {
             margin: 0;
@@ -195,7 +195,7 @@
     </div>
     
     <div style="position: absolute; left: 50%; transform: translateX(-50%); font-weight:bold; font-size: 16px;">
-        TextToCAD v1.70
+        TextToCAD v1.71
     </div>
 
     <div>
@@ -1241,15 +1241,41 @@
                             // Draw Image directly
                             tempCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
                             
-                            // Download
-                            const link = document.createElement('a');
-                            link.download = `capture_${Date.now()}.png`;
-                            link.href = tempCanvas.toDataURL();
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            
-                            log('Image captured.');
+                            // Save Capture
+                            tempCanvas.toBlob(async (blob) => {
+                                if (window.showSaveFilePicker) {
+                                    try {
+                                        const handle = await window.showSaveFilePicker({
+                                            suggestedName: `capture_${Date.now()}.png`,
+                                            types: [{
+                                                description: 'PNG Image',
+                                                accept: { 'image/png': ['.png'] },
+                                            }],
+                                        });
+                                        const writable = await handle.createWritable();
+                                        await writable.write(blob);
+                                        await writable.close();
+                                        log('Image captured (Saved As).');
+                                    } catch (err) {
+                                        if (err.name !== 'AbortError') {
+                                            console.error('Save File Picker failed:', err);
+                                            log('Save failed: ' + err.message, 'error');
+                                        } else {
+                                            log('Capture save cancelled.');
+                                        }
+                                    }
+                                } else {
+                                    // Fallback for browsers without API
+                                    const link = document.createElement('a');
+                                    link.download = `capture_${Date.now()}.png`;
+                                    link.href = URL.createObjectURL(blob);
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    URL.revokeObjectURL(link.href);
+                                    log('Image captured (Download).');
+                                }
+                            });
                         }
             
                         isCaptureMode = false;
